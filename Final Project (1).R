@@ -21,7 +21,7 @@ library(RMySQL)
 # DO NOT CHANGE host, port, or user unless you intentionally changed those variables when creating your db
 # If you set a password input your password, otherwise leave delete the parameter
 mysqlconnection = dbConnect(RMySQL::MySQL(),
-                            dbname='lecture',
+                            dbname='final',
                             host='localhost',
                             port=3306,
                             user='root',
@@ -31,23 +31,142 @@ dbListTables(mysqlconnection)
 # Allows you to pull a query using the sql connection
 # If you use double quotes in your query, convert them to single quotes to prevent errors
 query = "
-With T1 as (
-	select work_year, experience_level, job_title, salary, 
-			case when salary <= 50000 then 'level 1'
-			when salary > 50000 and salary <= 100000 then 'level 2'
-			when salary > 100000 and salary <= 250000 then 'level 3'
-			else 'level 4'
-			end as 'salary level'
-		from salariesv3
-), T2 as (
-	select concat_ws(', ', work_year, experience_level, job_title) as title, salary, `salary level`
-	from T1
-)
-select *, substr(title, 10) as substr_ex, UPPER(`salary level`) as uppercase_ex, character_length(title) as char_len_ex, 
-find_in_set('EN', title) ind_in_title_ex, format(salary, 'N') as format_ex, replace(`salary level`, 'level', 'range') as replace_ex
-from T2;
 
-select * from airbnbdata
+
+
+WITH CleanedData AS (
+    SELECT
+        COALESCE(c.Year, r.Year) AS Year,
+        c.Team AS ChampionTeam,
+        r.Team AS RunnerupTeam,
+        COALESCE(c.Game, r.Game) AS Game,
+        COALESCE(c.Win, 0) AS ChampionWin,
+        COALESCE(c.Home, 0) AS ChampionHome,
+        COALESCE(c.MP, 0) AS ChampionMP,
+        COALESCE(c.FG, 0) AS ChampionFG,
+        COALESCE(c.FGA, 0) AS ChampionFGA,
+        COALESCE(c.FGP, 0) AS ChampionFGP,
+        COALESCE(c.TP, 0) AS ChampionTP,
+        COALESCE(c.TPA, 0) AS ChampionTPA,
+        COALESCE(c.TPP, 0) AS ChampionTPP,
+        COALESCE(c.FT, 0) AS ChampionFT,
+        COALESCE(c.FTA, 0) AS ChampionFTA,
+        COALESCE(c.FTP, 0) AS ChampionFTP,
+        COALESCE(c.ORB, 0) AS ChampionORB,
+        COALESCE(c.DRB, 0) AS ChampionDRB,
+        COALESCE(c.TRB, 0) AS ChampionTRB,
+        COALESCE(c.AST, 0) AS ChampionAST,
+        COALESCE(c.STL, 0) AS ChampionSTL,
+        COALESCE(c.BLK, 0) AS ChampionBLK,
+        COALESCE(c.TOV, 0) AS ChampionTOV,
+        COALESCE(c.PF, 0) AS ChampionPF,
+        COALESCE(c.PTS, 0) AS ChampionPTS,
+        COALESCE(r.Win, 0) AS RunnerupWin,
+        COALESCE(r.Home, 0) AS RunnerupHome,
+        COALESCE(r.MP, 0) AS RunnerupMP,
+        COALESCE(r.FG, 0) AS RunnerupFG,
+        COALESCE(r.FGA, 0) AS RunnerupFGA,
+        COALESCE(r.FGP, 0) AS RunnerupFGP,
+        COALESCE(r.TP, 0) AS RunnerupTP,
+        COALESCE(r.TPA, 0) AS RunnerupTPA,
+        COALESCE(r.TPP, 0) AS RunnerupTPP,
+        COALESCE(r.FT, 0) AS RunnerupFT,
+        COALESCE(r.FTA, 0) AS RunnerupFTA,
+        COALESCE(r.FTP, 0) AS RunnerupFTP,
+        COALESCE(r.ORB, 0) AS RunnerupORB,
+        COALESCE(r.DRB, 0) AS RunnerupDRB,
+        COALESCE(r.TRB, 0) AS RunnerupTRB,
+        COALESCE(r.AST, 0) AS RunnerupAST,
+        COALESCE(r.STL, 0) AS RunnerupSTL,
+        COALESCE(r.BLK, 0) AS RunnerupBLK,
+        COALESCE(r.TOV, 0) AS RunnerupTOV,
+        COALESCE(r.PF, 0) AS RunnerupPF,
+        COALESCE(r.PTS, 0) AS RunnerupPTS
+    FROM
+        champions c
+    LEFT JOIN
+        runnerups r ON c.Year = r.Year AND c.Game = r.Game
+
+    UNION
+
+    SELECT
+        COALESCE(c.Year, r.Year) AS Year,
+        c.Team AS ChampionTeam,
+        r.Team AS RunnerupTeam,
+        COALESCE(c.Game, r.Game) AS Game,
+        COALESCE(c.Win, 0) AS ChampionWin,
+        COALESCE(c.Home, 0) AS ChampionHome,
+        COALESCE(c.MP, 0) AS ChampionMP,
+        COALESCE(c.FG, 0) AS ChampionFG,
+        COALESCE(c.FGA, 0) AS ChampionFGA,
+        COALESCE(c.FGP, 0) AS ChampionFGP,
+        COALESCE(c.TP, 0) AS ChampionTP,
+        COALESCE(c.TPA, 0) AS ChampionTPA,
+        COALESCE(c.TPP, 0) AS ChampionTPP,
+        COALESCE(c.FT, 0) AS ChampionFT,
+        COALESCE(c.FTA, 0) AS ChampionFTA,
+        COALESCE(c.FTP, 0) AS ChampionFTP,
+        COALESCE(c.ORB, 0) AS ChampionORB,
+        COALESCE(c.DRB, 0) AS ChampionDRB,
+        COALESCE(c.TRB, 0) AS ChampionTRB,
+        COALESCE(c.AST, 0) AS ChampionAST,
+        COALESCE(c.STL, 0) AS ChampionSTL,
+        COALESCE(c.BLK, 0) AS ChampionBLK,
+        COALESCE(c.TOV, 0) AS ChampionTOV,
+        COALESCE(c.PF, 0) AS ChampionPF,
+        COALESCE(c.PTS, 0) AS ChampionPTS,
+        COALESCE(r.Win, 0) AS RunnerupWin,
+        COALESCE(r.Home, 0) AS RunnerupHome,
+        COALESCE(r.MP, 0) AS RunnerupMP,
+        COALESCE(r.FG, 0) AS RunnerupFG,
+        COALESCE(r.FGA, 0) AS RunnerupFGA,
+        COALESCE(r.FGP, 0) AS RunnerupFGP,
+        COALESCE(r.TP, 0) AS RunnerupTP,
+        COALESCE(r.TPA, 0) AS RunnerupTPA,
+        COALESCE(r.TPP, 0) AS RunnerupTPP,
+        COALESCE(r.FT, 0) AS RunnerupFT,
+        COALESCE(r.FTA, 0) AS RunnerupFTA,
+        COALESCE(r.FTP, 0) AS RunnerupFTP,
+        COALESCE(r.ORB, 0) AS RunnerupORB,
+        COALESCE(r.DRB, 0) AS RunnerupDRB,
+        COALESCE(r.TRB, 0) AS RunnerupTRB,
+        COALESCE(r.AST, 0) AS RunnerupAST,
+        COALESCE(r.STL, 0) AS RunnerupSTL,
+        COALESCE(r.BLK, 0) AS RunnerupBLK,
+        COALESCE(r.TOV, 0) AS RunnerupTOV,
+        COALESCE(r.PF, 0) AS RunnerupPF,
+        COALESCE(r.PTS, 0) AS RunnerupPTS
+    FROM
+        champions c
+    RIGHT JOIN
+        runnerups r ON c.Year = r.Year AND c.Game = r.Game
+)
+
+, SeriesAggregated AS (
+    SELECT
+        Year,
+        ChampionTeam,
+        RunnerupTeam,
+        SUM(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionPTS ELSE 0 END) AS TotalChampionPTS,
+        SUM(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupPTS ELSE 0 END) AS TotalRunnerupPTS
+    FROM
+        CleanedData
+    GROUP BY
+        Year,
+        ChampionTeam,
+        RunnerupTeam
+)
+
+SELECT
+    Year,
+    ChampionTeam,
+    RunnerupTeam,
+    TotalChampionTOV,
+    TotalRunnerupTOV
+FROM
+    SeriesAggregated;
+
+
 "
 
 result = dbSendQuery(mysqlconnection, query) 
