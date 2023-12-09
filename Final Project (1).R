@@ -22,18 +22,18 @@ library(tidyverse)
 # For MySQLWorkbench dbname will be the name of your schema NOT your database connection
 # DO NOT CHANGE host, port, or user unless you intentionally changed those variables when creating your db
 # If you set a password input your password, otherwise leave delete the parameter
+#mysqlconnection = dbConnect(RMySQL::MySQL(),
+ #                           dbname='final',
+  #                          host='127.0.0.1',
+   #                         port=3306,
+    #                        user='root',
+     #                       password='awesomedude')
 mysqlconnection = dbConnect(RMySQL::MySQL(),
                             dbname='final',
-                            host='127.0.0.1',
+                           host='localhost',
                             port=3306,
                             user='root',
-                            password='awesomedude')
-# mysqlconnection = dbConnect(RMySQL::MySQL(),
-#                            dbname='final',
-#                           host='localhost',
-#                            port=3306,
-#                            user='root',
-#                            password='Cmsc389ePassword_!')
+                            password='Cmsc389ePassword_!')
 # Shows all tables in schema
 dbListTables(mysqlconnection)
 # Allows you to pull a query using the sql connection
@@ -103,6 +103,7 @@ WITH CleanedData AS (
         COALESCE(c.Year, r.Year) AS Year,
         c.Team AS ChampionTeam,
         r.Team AS RunnerupTeam,
+        -- coalesce each column
         COALESCE(c.Game, r.Game) AS Game,
         COALESCE(c.Win, 0) AS ChampionWin,
         COALESCE(c.Home, 0) AS ChampionHome,
@@ -157,14 +158,14 @@ WITH CleanedData AS (
         Year,
         ChampionTeam,
         RunnerupTeam,
-        AVG(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionTOV ELSE 0 END) AS TotalChampionTOV,
-        AVG(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupTOV ELSE 0 END) AS TotalRunnerupTOV,
-        SUM(CASE WHEN ChampionTeam is NOT NULL THEN ChampionFG ELSE 0 END) AS TotalChampionFGM,
-        SUM(CASE WHEN RunnerupTeam is NOT NULL THEN RunnerupFG ELSE 0 END) AS TotalRunnerupFGM,
-        AVG(CASE WHEN ChampionTeam is NOT NULL THEN ChampionORB + ChampionDRB ELSE 0 END) AS AVGChampionREB,
-        AVG(CASE WHEN RunnerupTeam is NOT NULL THEN RunnerupORB + RunnerupDRB ELSE 0 END) AS AVGRunnerupREB,
-        SUM(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionFT ELSE 0 END) AS AVGChampionFTP,
-        SUM(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupFT ELSE 0 END) AS AVGRunnerupFTP
+        AVG(CAST(SUBSTRING(CAST(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionTOV ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS TotalChampionTOV,
+        AVG(CAST(SUBSTRING(CAST(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupTOV ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS TotalRunnerupTOV,
+        SUM(CAST(SUBSTRING(CAST(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionFG ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS TotalChampionFGM,
+        SUM(CAST(SUBSTRING(CAST(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupFG ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS TotalRunnerupFGM,
+        AVG(CAST(SUBSTRING(CAST(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionORB + ChampionDRB ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS AVGChampionREB,
+        AVG(CAST(SUBSTRING(CAST(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupORB + RunnerupDRB ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS AVGRunnerupREB,
+        SUM(CAST(SUBSTRING(CAST(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionFT ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS AVGChampionFTP,
+        SUM(CAST(SUBSTRING(CAST(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupFT ELSE 0 END AS VARCHAR), 1, 4) AS DOUBLE)) AS AVGRunnerupFTP
     FROM
         CleanedData
     GROUP BY
