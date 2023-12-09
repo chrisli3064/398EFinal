@@ -1,5 +1,7 @@
 install.packages("RMySQL")
+install.packages("tidyverse")
 library(RMySQL)
+library(tidyverse)
 
 ##################################################################################################################################
 #                                         Setting a MySQLWorkbench Connection Password
@@ -22,10 +24,16 @@ library(RMySQL)
 # If you set a password input your password, otherwise leave delete the parameter
 mysqlconnection = dbConnect(RMySQL::MySQL(),
                             dbname='final',
-                            host='localhost',
+                            host='127.0.0.1',
                             port=3306,
                             user='root',
-                            password='Cmsc389ePassword_!')
+                            password='awesomedude')
+# mysqlconnection = dbConnect(RMySQL::MySQL(),
+#                            dbname='final',
+#                           host='localhost',
+#                            port=3306,
+#                            user='root',
+#                            password='Cmsc389ePassword_!')
 # Shows all tables in schema
 dbListTables(mysqlconnection)
 # Allows you to pull a query using the sql connection
@@ -147,8 +155,14 @@ WITH CleanedData AS (
         Year,
         ChampionTeam,
         RunnerupTeam,
-        SUM(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionPTS ELSE 0 END) AS TotalChampionPTS,
-        SUM(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupPTS ELSE 0 END) AS TotalRunnerupPTS
+        AVG(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionTOV ELSE 0 END) AS TotalChampionTOV,
+        AVG(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupTOV ELSE 0 END) AS TotalRunnerupTOV,
+        SUM(CASE WHEN ChampionTeam is NOT NULL THEN ChampionFG ELSE 0 END) AS TotalChampionFGM,
+        SUM(CASE WHEN RunnerupTeam is NOT NULL THEN RunnerupFG ELSE 0 END) AS TotalRunnerupFGM,
+        AVG(CASE WHEN ChampionTeam is NOT NULL THEN ChampionORB + ChampionDRB ELSE 0 END) AS AVGChampionREB,
+        AVG(CASE WHEN RunnerupTeam is NOT NULL THEN RunnerupORB + RunnerupDRB ELSE 0 END) AS AVGRunnerupREB,
+        SUM(CASE WHEN ChampionTeam IS NOT NULL THEN ChampionFT ELSE 0 END) AS AVGChampionFTP,
+        SUM(CASE WHEN RunnerupTeam IS NOT NULL THEN RunnerupFT ELSE 0 END) AS AVGRunnerupFTP
     FROM
         CleanedData
     GROUP BY
@@ -162,7 +176,13 @@ SELECT
     ChampionTeam,
     RunnerupTeam,
     TotalChampionTOV,
-    TotalRunnerupTOV
+    TotalRunnerupTOV,
+    ROUND(TotalChampionTOV - TotalRunnerupTOV, 3) as TOVDifference,
+    TotalChampionFGM,
+    TotalRunnerupFGM,
+    TotalChampionFGM - TotalRunnerupFGM as FGMDifference,
+    ROUND(AVGChampionREB - AVGRunnerupREB, 3) as REBDifference,
+    AVGChampionFTP - AVGRunnerupFTP as FTMDifference
 FROM
     SeriesAggregated;
 
@@ -173,3 +193,31 @@ result = dbSendQuery(mysqlconnection, query)
 # Stores resulting table as dataframe
 df = fetch(result)
 print(df)
+
+print(ggplot(df, aes(x = df$Year, y = df$TOVDifference)) +
+        geom_point() +
+        labs(title = "Average Turnover Difference between Champions and Runner-Ups from each year",
+             x = "Year",
+             y = "Turnover Difference"))
+summary(lm(df$TOVDifference ~ df$Year, data = df))
+
+print(ggplot(df, aes(x = df$Year, y = df$FGMDifference)) +
+        geom_point() +
+        labs(title = "Field Goals Made Difference between Champions and Runner-Ups from each year",
+             x = "Year",
+             y = "Field Goal Made Difference"))
+summary(lm(df$FGMDifference ~ df$Year, data = df))
+
+print(ggplot(df, aes(x = df$Year, y = df$REBDifference)) +
+        geom_point() +
+        labs(title = "Average Rebounding Difference between Champions and Runner-Ups from each year",
+             x = "Year",
+             y = "Rebounding Difference"))
+summary(lm(df$REBDifference ~ df$Year, data = df))
+
+print(ggplot(df, aes(x = df$Year, y = df$FTMDifference)) +
+        geom_point() +
+        labs(title = "Free Throw Difference between Champions and Runner-Ups from each year",
+             x = "Year",
+             y = "Free Throw Difference"))
+summary(lm(df$FTMDifference ~ df$Year, data = df))
