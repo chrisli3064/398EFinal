@@ -41,12 +41,13 @@ dbListTables(mysqlconnection)
 query = "
 
 
-
+-- CTE to combine data from champions and runner-ups csvs
 WITH CleanedData AS (
     SELECT
         COALESCE(c.Year, r.Year) AS Year,
         c.Team AS ChampionTeam,
         r.Team AS RunnerupTeam,
+        -- Columns for Champion Data
         COALESCE(c.Game, r.Game) AS Game,
         COALESCE(c.Win, 0) AS ChampionWin,
         COALESCE(c.Home, 0) AS ChampionHome,
@@ -69,6 +70,7 @@ WITH CleanedData AS (
         COALESCE(c.TOV, 0) AS ChampionTOV,
         COALESCE(c.PF, 0) AS ChampionPF,
         COALESCE(c.PTS, 0) AS ChampionPTS,
+        -- columns for Runner up statistics
         COALESCE(r.Win, 0) AS RunnerupWin,
         COALESCE(r.Home, 0) AS RunnerupHome,
         COALESCE(r.MP, 0) AS RunnerupMP,
@@ -149,7 +151,7 @@ WITH CleanedData AS (
     RIGHT JOIN
         runnerups r ON c.Year = r.Year AND c.Game = r.Game
 )
-
+-- CTE to aggreatgate series statistics
 , SeriesAggregated AS (
     SELECT
         Year,
@@ -170,7 +172,7 @@ WITH CleanedData AS (
         ChampionTeam,
         RunnerupTeam
 )
-
+-- final select statement to retrieve aggregated series statistics
 SELECT
     Year,
     ChampionTeam,
